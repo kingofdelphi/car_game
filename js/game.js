@@ -1,14 +1,31 @@
 var canvas=document.getElementById("canvas");
 var ctx=canvas.getContext("2d");
 
-var f = 1.0;
-var camera = {x : 0, y : 0, width : canvas.width / f, height:canvas.height / f};
+var w = 20, h = 450, xpadd = 250, ypadd = 250;
+var lanes = 3;
+var low = -500, high = 500;
+var road_w = lanes * xpadd;
+var road_h = (high - low) * (h + ypadd);
 
-function setPos(obj_id, left, top) {
-    var tyre = document.getElementById(obj_id);
-    tyre.style.left = left + "px";
-    tyre.style.top = top + "px";
+var drawScene = function() {
+    var ok = toCam(-road_w / 2, -road_h / 2);
+    ctx.fillStyle = "#575757";
+    ctx.fillRect(ok.x, ok.y, road_w, road_h);
+
+    for (var j = 1; j < lanes; ++j) {
+        var xp = j * xpadd - road_w / 2 - w / 2;
+        for (var i = low; i <= high; ++i) {
+            var y = i * h + i * ypadd;
+            var d = toCam(xp, y);
+            ctx.fillStyle = "white";
+            ctx.fillRect(d.x, d.y, w, h);
+        }
+    }
 }
+
+var f = 1.0;
+
+var camera = {x : 0, y : 0, width : canvas.width / f, height:canvas.height / f};
 
 function toCam(x, y) {
     return {x: x + canvas.width / 2 - camera.x, y:y + canvas.height / 2 - camera.y};
@@ -23,30 +40,20 @@ function drawRotated(degrees, image, x, y, w, h){
     ctx.restore();
 }
 
-function Car() {
+function Car(x = 0, y = 0) {
     this.wheel_rot = 0;
     this.rot = 0;
-    this.x = 0;
-    this.y = 0;
-    this.len = 40;
-    this.bodylen = 120;
-    this.wheel_radius = 20;
+    this.x = x;
+    this.y = y;
+    this.len = 28;
+    var carh = 80;
+    var carw = 140;
+    this.bodylen = carw - 70;
+    this.wheel_radius = 10;
     this.vel = 0;
+    var wheel_h = 40;
+    var wheel_w = 50;
     var self = this;
-
-    var drawScene = function() {
-        var w = 40, h = 450, xpadd = 250, ypadd = 250;
-        var lanes = 3;
-        for (var j = 0; j < lanes; ++j) {
-            var xp = j * (w + xpadd) - (lanes * w + (lanes - 1) * xpadd)  / 2;
-            for (var i = -500; i < 500; ++i) {
-                var y = -i * h - i * ypadd;
-                var d = toCam(xp, y);
-                ctx.fillStyle = "white";
-                ctx.fillRect(d.x, d.y, w, h);
-            }
-        }
-    }
 
     this.draw = function() {
         var radius = 5;
@@ -85,15 +92,10 @@ function Car() {
 
         var wrot = Math.floor((this.rot + this.wheel_rot) * 180.0 / Math.PI);
         var brot = Math.floor(this.rot * 180.0 / Math.PI);
-        var h = 100 / 2;
-        var w = 100 / 2;
-        drawScene();
-        drawRotated(wrot, tyre1, px1, py1, 50, 50);
-        drawRotated(wrot, tyre2, px2, py2, 50, 50);
-        drawRotated(brot, tyre3, rearx1, reary1, 50, 50);
-        drawRotated(brot, tyre4, rearx2, reary2, 50, 50);
-        var carh = 100;
-        var carw = 200;
+        drawRotated(wrot, tyre1, px1, py1, wheel_w, wheel_h);
+        drawRotated(wrot, tyre2, px2, py2, wheel_w, wheel_h);
+        drawRotated(brot, tyre3, rearx1, reary1, wheel_w, wheel_h);
+        drawRotated(brot, tyre4, rearx2, reary2, wheel_w, wheel_h);
         var x = this.x - carh / 2;
         var rx = this.x;
         var ry = this.y;
@@ -104,16 +106,52 @@ function Car() {
         var car_rot = brot + 90;
         car.style.webkitTransform="rotate(" + car_rot + "deg)";
 
-        drawRotated(car_rot, car, (this.x + bx) / 2, (this.y + by) / 2, 200, 100);
+        drawRotated(car_rot, car, (this.x + bx) / 2, (this.y + by) / 2, carw, carh);
 
         //ctx.fillStyle = "rgba(100, 100, 100, 0.5)";
         //ctx.fillRect(canvas.width / 2 - camera.width / 2, canvas.height / 2 - camera.height / 2, camera.width, camera.height);
+        drawBounds();
     }
 
-    var updateCamera = function() {
-        var yoff = -100;
-        //camera.x += (self.x - camera.x) / 5;
-        camera.y += (self.y + yoff - camera.y) / 5;
+    var rotate = function(obj, angle) {
+        var cs = Math.cos(angle);
+        var si = Math.sin(angle);
+        return {x : obj.x * cs - obj.y * si, y: si * obj.x + cs * obj.y};
+    }
+
+    var drawBounds = function() {
+        var pts = self.getRect();
+        for (var i = 0; i < pts.length; ++i) {
+            pts[i] = toCam(pts[i].x, pts[i].y);
+        }
+        ctx.fillStyle = "black";
+        ctx.beginPath();
+        ctx.moveTo(pts[0].x, pts[0].y);
+        for (var i = 1; i < pts.length; ++i) {
+            ctx.lineTo(pts[i].x, pts[i].y);
+        }
+        ctx.lineTo(pts[0].x, pts[0].y);
+        ctx.stroke();
+    }
+
+    this.getRect = function() {
+        var wt = carw / 2;
+        var ht = carh / 2;
+        var pts = [
+            {x: -wt, y:-ht},
+            {x: wt, y:-ht},
+            {x: wt, y:ht},
+            {x: -wt, y:ht},
+        ];
+
+        var bx = self.x + self.bodylen * Math.cos(self.rot + Math.PI / 2);
+        var by = self.y + self.bodylen * Math.sin(self.rot + Math.PI / 2);
+        for (var i = 0; i < pts.length; ++i) {
+            pts[i] = rotate(pts[i], self.rot + Math.PI / 2);
+            pts[i].x += (self.x + bx) / 2;
+            pts[i].y += (self.y + by) / 2;
+        }
+        return pts;
     }
 
     this.update = function() {
@@ -136,17 +174,33 @@ function Car() {
         var mag = Math.min(5, Math.abs(this.vel));
         if (this.vel < 0) mag *= -1;
         this.rot += mag * this.wheel_rot / 100;
-        this.draw();
+        var pts = this.getRect();
+        var lb = 0, ub = 0;
+        for (var i = 0; i < pts.length; ++i) {
+            if (pts[i].x < -road_w / 2) {
+                lb = Math.max(lb, -road_w / 2 - pts[i].x);
+            }
+            if (pts[i].x > road_w / 2) {
+                ub = Math.max(ub, pts[i].x - road_w / 2);
+            }
+        }
+        if (lb != 0) {
+            this.x += lb;
+            this.vel *= -0.35;
+        }
 
-        updateCamera();
+        if (ub != 0) {
+            this.x -= ub;
+            this.vel *= -0.35;
+        }
     }
 }
 
 var car = new Car();
-var car2 = new Car();
+var car2 = new Car(150, -120);
+var car3 = new Car(-150, -120);
 
-car.draw();
-car2.draw();
+//var car2 = new Car(-250, 550);
 
 var up = 38, right = 39;
 var down = 40;
@@ -165,15 +219,14 @@ window.addEventListener('keydown', function(e) {
     marked[e.keyCode] = 1;
 });
 
-
 var clear = function() {
-    ctx.fillStyle = "silver";
+    ctx.fillStyle = "#4e6628";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 }
 
 
 function keys() {
-    var mxvel = 15;
+    var mxvel = 25;
     if (marked[up]) {
         car.vel += 0.1;
         car.vel = Math.min(car.vel, mxvel);
@@ -192,10 +245,68 @@ function keys() {
     }
 }
 
+var updateCamera = function() {
+    var yoff = -100;
+    //camera.x += (car.x - camera.x) / 5;
+    camera.y += (car.y + yoff - camera.y) / 5;
+}
+
+var carlist = [car, car2, car3];
+
+var paused = 0;
+
+window.addEventListener('keydown', function() {
+    //paused = !paused;
+});
+
 function upd() {
+    if (paused) return ;
     keys();
+    for (var i = 0; i < carlist.length; ++i) {
+        //if (i) carlist[i].vel = 10;
+        if (i) carlist[i].vel = 1;
+        carlist[i].update();
+    }
+    for (var i = 0; i < carlist.length; ++i) {
+        for (var j = i + 1; j < carlist.length; ++j) {
+            var r1 = carlist[i].getRect();
+            var r2 = carlist[j].getRect();
+            var d = checkColl(r1, r2);
+            if (d[0] == 0) continue;
+            var r = [r1, r2];
+            var cent = [];
+            for (var l = 0; l < 2; ++l) {
+                var sx = 0, sy = 0;
+                for (var k = 0; k < r[l].length; ++k) {
+                    sx += r[l][k].x;
+                    sy += r[l][k].y;
+                }
+                sx /= r[l].length;
+                sy /= r[l].length;
+                cent.push({x:sx, y:sy});
+            }
+            var dx = cent[0].x - cent[1].x;
+            var dy = cent[0].y - cent[1].y;
+            var dir = dx * d[2].x + dy * d[2].y;
+            if (dir < 0) {
+                d[2].x *= -1;
+                d[2].y *= -1;
+            }
+            d[1] /= 2;
+            console.log(d[1]);
+            carlist[i].x += d[1] * d[2].x;
+            carlist[i].y += d[1] * d[2].y;
+            carlist[j].x -= d[1] * d[2].x;
+            carlist[j].y -= d[1] * d[2].y;
+        }
+    }
+    updateCamera();
+    //render
     clear();
-    car.update();
+    drawScene();
+    for (var i = 0; i < carlist.length; ++i) {
+        carlist[i].draw();
+    }
 }
 
 setInterval(upd, 20);
@@ -204,7 +315,54 @@ function resize() {
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
 }
+
 window.addEventListener('resize', resize);
 
 resize();
 
+function dot(a, b) {
+    return a.x * b.x + a.y * b.y;
+}
+
+function project(poly, axis) {
+    var minp = dot(poly[0], axis);
+    var maxp = minp;
+    for (var i = 1; i < poly.length; ++i) {
+        var prj = dot(poly[i], axis);
+        minp = Math.min(minp, prj);
+        maxp = Math.max(maxp, prj);
+    }
+    return {left:minp, right:maxp};
+}
+
+function checkColl(poly_a, poly_b) {
+    var overlap, mtv_axis;
+    var found = 0;
+    var polys = [poly_a, poly_b];
+    for (var j = 0; j < polys.length; ++j) {
+        var cp = polys[j];
+        for (var i = 1; i <= cp.length; ++i) {
+            var cur = i < cp.length ? i : 0;
+            var dx = cp[cur].x - cp[i - 1].x;
+            var dy = cp[cur].y - cp[i - 1].y;
+            var mg = Math.sqrt(dx * dx + dy * dy);
+            if (mg == 0) mg = 1;
+            dx /= mg;
+            dy /= mg;
+            var axis = {x:dy, y:-dx};
+            var pa = project(poly_a, axis);
+            var pb = project(poly_b, axis);
+            if (pa.right < pb.left || pa.left > pb.right) return [0];
+            var lft = Math.max(pa.left, pb.left);
+            var rgt = Math.min(pa.right, pb.right);
+            del = rgt - lft;
+            console.log(del);
+            if (!found || del < overlap) {
+                mtv_axis = axis;
+                found = 1;
+                overlap = del;
+            }
+        }
+    }
+    return [1, overlap, mtv_axis];
+}
