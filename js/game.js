@@ -1,18 +1,52 @@
+var canvas=document.getElementById("canvas");
+var ctx=canvas.getContext("2d");
+
+var f = 1.0;
+var camera = {x : 0, y : 0, width : canvas.width / f, height:canvas.height / f};
+
 function setPos(obj_id, left, top) {
     var tyre = document.getElementById(obj_id);
     tyre.style.left = left + "px";
     tyre.style.top = top + "px";
 }
 
+function toCam(x, y) {
+    return {x: x + canvas.width / 2 - camera.x, y:y + canvas.height / 2 - camera.y};
+}
+
+function drawRotated(degrees, image, x, y, w, h){
+    var p = toCam(x, y);
+    ctx.save();
+    ctx.translate(p.x, p.y);
+    ctx.rotate(degrees * Math.PI / 180.0);
+    ctx.drawImage(image, -w / 2, -h / 2, w, h);
+    ctx.restore();
+}
+
 function Car() {
     this.wheel_rot = 0;
     this.rot = 0;
-    this.x = this.y = 300;
+    this.x = 0;
+    this.y = 0;
     this.len = 40;
     this.bodylen = 120;
     this.wheel_radius = 20;
-    this.accln = 0;
     this.vel = 0;
+    var self = this;
+
+    var drawScene = function() {
+        var w = 40, h = 450, xpadd = 250, ypadd = 250;
+        var lanes = 3;
+        for (var j = 0; j < lanes; ++j) {
+            var xp = j * (w + xpadd) - (lanes * w + (lanes - 1) * xpadd)  / 2;
+            for (var i = -500; i < 500; ++i) {
+                var y = -i * h - i * ypadd;
+                var d = toCam(xp, y);
+                ctx.fillStyle = "white";
+                ctx.fillRect(d.x, d.y, w, h);
+            }
+        }
+    }
 
     this.draw = function() {
         var radius = 5;
@@ -53,15 +87,11 @@ function Car() {
         var brot = Math.floor(this.rot * 180.0 / Math.PI);
         var h = 100 / 2;
         var w = 100 / 2;
-        setPos('tyre1', px1 - w / 2, py1 - h / 2);
-        setPos('tyre2', px2 - w / 2, py2 - h / 2);
-        setPos('tyre3', rearx1 - w / 2, reary1 - h / 2);
-        setPos('tyre4', rearx2 - w / 2, reary2 - h / 2);
-        tyre1.style.webkitTransform="rotate(" + wrot + "deg)";
-        tyre2.style.webkitTransform="rotate(" + wrot + "deg)";
-        tyre3.style.webkitTransform="rotate(" + brot + "deg)";
-        tyre4.style.webkitTransform="rotate(" + brot + "deg)";
-        tyre4.style.webkitTransform="rotate(" + brot + "deg)";
+        drawScene();
+        drawRotated(wrot, tyre1, px1, py1, 50, 50);
+        drawRotated(wrot, tyre2, px2, py2, 50, 50);
+        drawRotated(brot, tyre3, rearx1, reary1, 50, 50);
+        drawRotated(brot, tyre4, rearx2, reary2, 50, 50);
         var carh = 100;
         var carw = 200;
         var x = this.x - carh / 2;
@@ -69,16 +99,26 @@ function Car() {
         var ry = this.y;
         var y = this.y - carw / 2;
 
-        setPos('car', (this.x + bx) / 2 - carw / 2, (this.y + by) / 2 - carh / 2);
+        //setPos('car', (this.x + bx) / 2 - carw / 2, (this.y + by) / 2 - carh / 2);
 
         var car_rot = brot + 90;
         car.style.webkitTransform="rotate(" + car_rot + "deg)";
-        
+
+        drawRotated(car_rot, car, (this.x + bx) / 2, (this.y + by) / 2, 200, 100);
+
+        //ctx.fillStyle = "rgba(100, 100, 100, 0.5)";
+        //ctx.fillRect(canvas.width / 2 - camera.width / 2, canvas.height / 2 - camera.height / 2, camera.width, camera.height);
+    }
+
+    var updateCamera = function() {
+        var yoff = -100;
+        //camera.x += (self.x - camera.x) / 5;
+        camera.y += (self.y + yoff - camera.y) / 5;
     }
 
     this.update = function() {
         var ang = this.wheel_rot + this.rot - Math.PI / 2;
-        var rot_dec = 0.05;
+        var rot_dec = 0.02;
         if (this.wheel_rot <= -rot_dec) {
             this.wheel_rot += rot_dec;
         } else if (this.wheel_rot >= rot_dec) {
@@ -97,29 +137,17 @@ function Car() {
         if (this.vel < 0) mag *= -1;
         this.rot += mag * this.wheel_rot / 100;
         this.draw();
-        var outerw = document.getElementById('outer').clientWidth;
-        var outerh = document.getElementById('outer').clientHeight;
 
-        if (this.x < 0) {
-            this.x = outerw - 1;
-        }
-
-        if (this.x >= outerw) {
-            this.x = 0;
-        }
-
-        if (this.y < 0) {
-            this.y = outerh - 1;
-        }
-
-        if (this.y >= outerh) {
-            this.y = 0;
-        }
+        updateCamera();
     }
 }
 
 var car = new Car();
+var car2 = new Car();
+
 car.draw();
+car2.draw();
+
 var up = 38, right = 39;
 var down = 40;
 var left = 37;
@@ -129,24 +157,32 @@ for (var i = 0; i < 256; ++i) {
     marked[i] = 0;
 }
 
-document.addEventListener('keyup', function(e) {
+window.addEventListener('keyup', function(e) {
     marked[e.keyCode] = 0;
 });
 
-document.addEventListener('keydown', function(e) {
+window.addEventListener('keydown', function(e) {
     marked[e.keyCode] = 1;
 });
 
+
+var clear = function() {
+    ctx.fillStyle = "silver";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+}
+
+
 function keys() {
+    var mxvel = 15;
     if (marked[up]) {
         car.vel += 0.1;
-        car.vel = Math.min(car.vel, 20);
+        car.vel = Math.min(car.vel, mxvel);
     } else if (marked[down]) {
         car.vel -= 0.1;
-        car.vel = Math.max(car.vel, -20);
+        car.vel = Math.max(car.vel, -mxvel);
     } 
-    var mx = 0.5;
-    var wheel_change = 0.08;
+    var mx = 0.2;
+    var wheel_change = 0.03;
     if (marked[right]) {
         car.wheel_rot += wheel_change;
         car.wheel_rot = Math.min(car.wheel_rot, mx);
@@ -158,7 +194,17 @@ function keys() {
 
 function upd() {
     keys();
+    clear();
     car.update();
 }
 
 setInterval(upd, 20);
+
+function resize() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+}
+window.addEventListener('resize', resize);
+
+resize();
+
