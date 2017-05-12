@@ -1,3 +1,9 @@
+function setPos(obj_id, left, top) {
+    var tyre = document.getElementById(obj_id);
+    tyre.style.left = left + "px";
+    tyre.style.top = top + "px";
+}
+
 function Car() {
     this.wheel_rot = 0;
     this.rot = 0;
@@ -47,10 +53,10 @@ function Car() {
         var brot = Math.floor(this.rot * 180.0 / Math.PI);
         var h = 100 / 2;
         var w = 100 / 2;
-        $('#tyre1').css({left:px1 - w / 2, top:py1 - h / 2});
-        $('#tyre2').css({left:px2 - w / 2, top:py2 - h / 2});
-        $('#tyre3').css({left:rearx1 - w / 2, top:reary1 - h / 2});
-        $('#tyre4').css({left:rearx2 - w / 2, top:reary2 - h / 2});
+        setPos('tyre1', px1 - w / 2, py1 - h / 2);
+        setPos('tyre2', px2 - w / 2, py2 - h / 2);
+        setPos('tyre3', rearx1 - w / 2, reary1 - h / 2);
+        setPos('tyre4', rearx2 - w / 2, reary2 - h / 2);
         tyre1.style.webkitTransform="rotate(" + wrot + "deg)";
         tyre2.style.webkitTransform="rotate(" + wrot + "deg)";
         tyre3.style.webkitTransform="rotate(" + brot + "deg)";
@@ -63,7 +69,8 @@ function Car() {
         var ry = this.y;
         var y = this.y - carw / 2;
 
-        $('#car').css({left:(this.x + bx) / 2 - carw / 2, top:(this.y + by) / 2 - carh / 2});
+        setPos('car', (this.x + bx) / 2 - carw / 2, (this.y + by) / 2 - carh / 2);
+
         var car_rot = brot + 90;
         car.style.webkitTransform="rotate(" + car_rot + "deg)";
         
@@ -90,15 +97,17 @@ function Car() {
         if (this.vel < 0) mag *= -1;
         this.rot += mag * this.wheel_rot / 100;
         this.draw();
-        var outerw = $('#outer').width();
-        var outerh = $('#outer').height();
-        console.log(outerw + " " + outerh);
+        var outerw = document.getElementById('outer').clientWidth;
+        var outerh = document.getElementById('outer').clientHeight;
+
         if (this.x < 0) {
             this.x = outerw - 1;
         }
+
         if (this.x >= outerw) {
             this.x = 0;
         }
+
         if (this.y < 0) {
             this.y = outerh - 1;
         }
@@ -120,11 +129,11 @@ for (var i = 0; i < 256; ++i) {
     marked[i] = 0;
 }
 
-$(document).keyup(function(e) {
+document.addEventListener('keyup', function(e) {
     marked[e.keyCode] = 0;
 });
 
-$(document).keydown(function(e) {
+document.addEventListener('keydown', function(e) {
     marked[e.keyCode] = 1;
 });
 

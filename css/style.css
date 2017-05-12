@@ -1,19 +1,17 @@
-#outer {
-    position : relative;
-    border:2px solid black;
-    width:800px;
-    height:600px;
-    margin:auto;
+* {
+    margin:0;
+    padding:0;
 }
 
-#wrap {
-    display:flex;
-    border:2px solid black;
+#outer {
+    position : relative;
+    height:100vh;
+    background:grey;
+    overflow:hidden;
 }
 
 .tyre {
     display:block;
-    #border:1px solid black;
     width:50;
     height:50;
     position:absolute;
