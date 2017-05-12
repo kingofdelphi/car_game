@@ -1,0 +1,29 @@
+#outer {
+    position : relative;
+    border:2px solid black;
+    width:800px;
+    height:600px;
+    margin:auto;
+}
+
+#wrap {
+    display:flex;
+    border:2px solid black;
+}
+
+.tyre {
+    display:block;
+    #border:1px solid black;
+    width:50;
+    height:50;
+    position:absolute;
+}
+
+#car {
+    left:0px;
+    top:0px;
+    width:200px;
+    height:100px;
+    position:absolute;
+    display:block;
+}
