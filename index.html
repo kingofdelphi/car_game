@@ -4,16 +4,30 @@
     </head>
     <body>
         <div id='resources'>
-            <img class='tyre' id='tyre1' src='images/tyre.png'></img> 
-            <img class='tyre' id='tyre2' src='images/tyre.png'></img> 
-            <img class='tyre' id='tyre3' src='images/tyre.png'></img> 
-            <img class='tyre' id='tyre4' src='images/tyre.png'></img> 
-            <img class='car' id='car' src='images/car.png'></img> 
+            <img class='tyre' id='tyre1' src='images/tyre.png'>
+            <img class='tyre' id='tyre2' src='images/tyre.png'>
+            <img class='tyre' id='tyre3' src='images/tyre.png'>
+            <img class='tyre' id='tyre4' src='images/tyre.png'>
+            <div class='cars-list'>
+                <!--<img class='car black' src='images/car_black.png'>--!>
+                <!--<img class='car blue' src='images/car_blue_nice.svg'>--!>
+                <img class='car' src='images/car_nice.png'>
+                <img class='car' src='images/car_yellow.png'>
+                <img class='car' src='images/car_grey_striped.svg'>
+                <img class='car' src='images/car_bright_green.svg'>
+                <img class='car' src='images/car_red.svg'>
+                <img class='car' src='images/car_green.svg'>
+                <img class='car' src='images/car_purple.svg'>
+            </div>
+            <img class='road' id='road' src='images/road_texture.jpg'>
+            <img class='grass' id='grass' src='images/grass.jpg'>
         </div>
         <div id='wrap'>
-            <canvas id='canvas' width=1000 height=600>
-            </canvas>
+            <canvas id='canvas'></canvas>
         </div>
+        <script src='js/collision.js'></script>
+        <script src='js/events.js'></script>
+        <script src='js/car.js'></script>
+        <script src='js/game.js'></script>
     </body>
-    <script src='js/game.js'></script>
 </html>
