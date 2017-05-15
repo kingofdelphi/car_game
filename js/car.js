@@ -7,11 +7,11 @@ var f = 1.0;
 var camera = {x : 0, y : 0, width : canvas.width / f, height:canvas.height / f};
 var drawScene = function() {
     var ok = toCam(-road_w / 2, -road_h / 2);
-    //ctx.fillStyle = "#575757";
     //ctx.fillRect(ok.x, ok.y, road_w, road_h);
     var img = document.getElementById("road");
     var pat = ctx.createPattern(img, "repeat");
-    ctx.fillStyle = pat;
+    //ctx.fillStyle = pat;
+    ctx.fillStyle = "#575757";
     ctx.translate(ok.x, ok.y);
     ctx.fillRect(0, 0, road_w, road_h);
     ctx.translate(-ok.x, -ok.y);
@@ -79,6 +79,7 @@ function Car(x = 0, y = 0, ai=true, car_image) {
         this.y = y;
         this.wheel_rot = 0;
         this.rot = 0;
+        this.score = 0;
         this.vel = 0;
     }
 
@@ -142,7 +143,8 @@ function Car(x = 0, y = 0, ai=true, car_image) {
         ctx.beginPath();
         ctx.moveTo(pa.x, pa.y);
         ctx.lineTo(pb.x, pb.y);
-        ctx.strokeStyle = "rgba(0, 0, 0, " + 0.8 * this.alpha + ")";
+        var ap1 = 0.5 * this.alpha;
+        ctx.strokeStyle = "rgba(0, 0, 0, " + (0.6 * this.alpha) + ")";
         ctx.stroke();
         var r = 0, g = 0, b = 0;
         if (this.health > 0.6) g = 255;
@@ -152,7 +154,7 @@ function Car(x = 0, y = 0, ai=true, car_image) {
         } else {
             r = 255;
         }
-        ctx.strokeStyle = "rgba(" + r + ", " + g + ", " + b + ", " + 0.6 * this.alpha + ")";
+        ctx.strokeStyle = "rgba(" + r + ", " + g + ", " + b + ", " + (0.4 * this.alpha) + ")";
         var dx = pb.x - pa.x, dy = pb.y - pa.y;
         ctx.beginPath();
         ctx.moveTo(pa.x, pa.y);
@@ -233,7 +235,7 @@ function Car(x = 0, y = 0, ai=true, car_image) {
             }
         }
         var v = Math.abs(this.vel);
-        var f = v <= 5 ? 1 / 1.2 : 5 / v;
+        var f = v <= 5 ? 1 / 1.1 : 5 / v;
         if (lb != 0) {
             this.x += lb;
             this.vel *= -0.35;
@@ -245,17 +247,26 @@ function Car(x = 0, y = 0, ai=true, car_image) {
             this.vel *= -0.35;
             this.health *= f;
         }
-        healthCheck();
-        if (self.destroyed) {
-            self.alpha *= 0.9;
+
+        if (this.health < 0.05) {
+            this.destroy();
         }
+
+        healthCheck();
+        if (this.destroyed) {
+            this.alpha *= 0.9;
+        }
+    }
+
+    this.destroy = function() {
+        this.health = 0;
+        this.destroyed = 1;
     }
 
     var healthCheck = function() {
         if (self.destroyed) return ;
-        var cur = Date.now() - self.last_collision;
-        if (cur > 1000) {
-            var dh = 0.001;
+        if (Math.abs(self.vel) > 5) {
+            var dh = 0.0005;
             self.health = Math.min(1, self.health + dh);
         }
     }

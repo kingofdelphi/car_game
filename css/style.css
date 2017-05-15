@@ -19,6 +19,49 @@
     display:block;
 }
 
+#wrap {
+    position:relative;
+}
+
+#game_over {
+    position:absolute;
+    width:60%;
+    height:60%;
+    left:50%;
+    top:50%;
+    background:rgba(0, 0, 0, 0.5);
+    opacity:0;
+    transform:translate(-50%, -50%);
+    transition: visibility 0s, opacity 1s linear;
+}
+
+.info {
+    font-size:68px;
+}
+
+
+.obj {
+    color:white;
+    font-family:"Monospace";
+    display:inline-block;
+    position:absolute;
+    left:50%;
+    top:50%;
+    transform:translate(-50%, -50%);
+    text-align:center;
+}
+
+
 #resources {
     display:none;
+}
+
+#btn {
+    display:inline-block;
+    width:200px;
+    margin-top:20px;
+    padding-top:20px;
+    padding-bottom:20px;
+    background:black;
+    cursor:pointer;
 }

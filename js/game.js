@@ -1,6 +1,7 @@
 var canvas = document.getElementById("canvas");
 var ctx = canvas.getContext("2d");
 
+
 var clear = function() {
     //ctx.fillStyle = "#4e6628";
     ctx.fillStyle = "#4e6628";
@@ -53,10 +54,10 @@ function genRandomCars() {
     for (var i = 0; i < n; ++i) {
         remove.push(0);
     }
-
+    console.log(n);
     for (var i = 1; i < n; ++i) {
         var dy = Math.abs(carlist[i].y - car.y);
-        if (dy > camera.height * 4) {
+        if (dy > camera.height * 4 || (carlist[i].destroyed && carlist[i].alpha < 0.05)) {
             remove[i] = 1;
         }
     }
@@ -143,22 +144,31 @@ function upd() {
             carlist[j].y -= d[1] * d[2].y;
             var fi = carlist[i].ai == false ? 0.99 : 0.98;
             var fj = carlist[j].ai == false ? 0.99 : 0.98;
+            var a = carlist[i], b = carlist[j];
+            if (a.ai) a = b;
+            var avel = Math.abs(a.vel);
+            var ok = a.ai == false && avel > Math.abs(b.vel);
             carlist[i].vel *= fi;
             carlist[j].vel *= fj;
             carlist[i].health *= fi;
             carlist[j].health *= fj;
             if (carlist[i].health < 0.05) {
-                carlist[i].health = 0;
-                carlist[i].destroyed = true;
+                carlist[i].destroy();
             }
-            if (carlist[j].health < 0.005) {
-                carlist[j].health = 0;
-                carlist[j].destroyed = true;
+            if (carlist[j].health < 0.05) {
+                carlist[j].destroy();
             }
             var time = Date.now();
             carlist[i].last_collision = time;
             carlist[j].last_collision = time;
+            if (ok) {
+                car.score += avel < 1 ? 1 : Math.floor(avel);
+                if (b.destroyed) car.score += 1000; //destroy bonus
+            }
         }
+    }
+    if (car.destroyed) {
+        document.getElementById('game_over').style.opacity = 1;
     }
     updateCamera();
     //render
@@ -167,6 +177,8 @@ function upd() {
     for (var i = 0; i < carlist.length; ++i) {
         carlist[i].draw();
     }
+    ctx.font = "30px Monospace";
+    ctx.fillText("Score: " + car.score, 25, 50);
 }
 
 setInterval(upd, 20);
@@ -181,3 +193,8 @@ function resize() {
 window.addEventListener('resize', resize);
 
 resize();
+
+document.getElementById('btn').onclick = function() {
+    car.init();
+    document.getElementById('game_over').style.opacity = 0;
+};
